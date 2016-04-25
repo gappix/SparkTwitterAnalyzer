@@ -4,3 +4,4 @@ target/*
 .settings/*
 .classpath
 .cache-main
+/target/

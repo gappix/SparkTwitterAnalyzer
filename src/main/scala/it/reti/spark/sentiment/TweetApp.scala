@@ -3,8 +3,6 @@ package it.reti.spark.sentiment
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
-
-//Import all necessed packages
 import org.apache.spark.sql._
 import org.apache.spark.sql.types._
 
@@ -15,7 +13,8 @@ case class Hedo(
     other1: Float,
     other2: String,
     other3: String,
-    other4: String)
+    other4: String
+    )
   
 object TweetApp {
   def main(args: Array[String]) {
@@ -33,119 +32,81 @@ object TweetApp {
     import sqlContext.implicits._
     import org.apache.spark.sql.functions._
     
-    /**
+    /*
     ------------------------------------------ TWEET PROCESSING -------------------------------------------
     */
     
-    //Tweet json storage load
+    // Tweet json storage load
     val inputTWEETS = sqlContextHIVE.read.json("/user/maria_dev/Tutorials/OpFelicita/LOMBARDIA.20160405-125641.json")
-    
-    
-    //Filtering based on language field
+    // Filtering based on language field
     val englishTWEETS = inputTWEETS.filter($"lang".equalTo("en"))
-    
-    
-    
-    
-    
     
     ////////////////////// UDFs to retrieve decapsulated coordinates ////////////////////////////////////////////////////////
     
-    val extract_bounding_box_latitude = udf (( box: Seq[Seq[Seq[Double]]]) =>{
-    
-                val latitude = box.head.head.last
-                latitude
+    val extract_bounding_box_latitude = udf((box: Seq[Seq[Seq[Double]]]) => {
+      val latitude = box.head.head.last
+      latitude
     })
     
     //////////////////////////////////
     
-    val extract_bounding_box_longitude = udf (( box: Seq[Seq[Seq[Double]]]) =>{
-    
-                val longitude = box.head.head.head
-                longitude
+    val extract_bounding_box_longitude = udf((box: Seq[Seq[Seq[Double]]]) => {
+      val longitude = box.head.head.head
+      longitude
     })
     
     //////////////////////////////////////////////////
     
-    val extract_geo_localization_latitude = udf (( box: Seq[Double]) =>{
-    
-                val latitude = box.last
-                latitude
+    val extract_geo_localization_latitude = udf((box: Seq[Double]) => {
+      val latitude = box.last
+      latitude
     })
     
     ///////////////////////////////////
     
     val extract_geo_localization_longitude = udf (( box: Seq[Double]) =>{
-    
-                val longitude = box.head
-                longitude
+      val longitude = box.head
+      longitude
     })
     
     /////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    
-    
                 
     val readyTWEETS = englishTWEETS.select( 
+        $"id".as("tweet_id"), 
+        $"lang", 
+        $"user.id".as("user_id"), 
+        $"user.name".as("user_name"),
+    
+        //latitude extraction from the correct field
+        when($"coordinates".isNull, extract_bounding_box_latitude(englishTWEETS("place.bounding_box.coordinates")))
+        .otherwise(extract_geo_localization_latitude(englishTWEETS("coordinates.coordinates")))
+        .as("latitude"),
+    
+        //longitude extraction from the correct field
+        when($"coordinates".isNull, extract_bounding_box_longitude(englishTWEETS("place.bounding_box.coordinates")))
+        .otherwise(extract_geo_localization_longitude(englishTWEETS("coordinates.coordinates")))
+        .as("longitude"),
+    
+        $"text"
+    )// end select
                                                    
-                                        $"id".as("tweet_id"), 
-                                        $"lang", 
-                                        $"user.id".as("user_id"), 
-                                        $"user.name".as("user_name"),
-    
-                                        //latitude extraction from the correct field
-                                        when($"coordinates".isNull, extract_bounding_box_latitude(englishTWEETS("place.bounding_box.coordinates")))
-                                        .otherwise(extract_geo_localization_latitude(englishTWEETS("coordinates.coordinates")))
-                                        .as("latitude"),
-    
-                                        //longitude extraction from the correct field
-                                        when($"coordinates".isNull, extract_bounding_box_longitude(englishTWEETS("place.bounding_box.coordinates")))
-                                        .otherwise(extract_geo_localization_longitude(englishTWEETS("coordinates.coordinates")))
-                                        .as("longitude"),
-    
-                                        $"text"
-                                                                                       )// end select
-                                                   
-    
-    /*
-    
-    
-    readyTWEETS :                                            [           TWEET_ID                                       long                 | 
-                                                                                                   LANG                                                            chararray         | (en)
-                                    USER_ID                                              long                 | 
-                                    USER_NAME                                      chararray         | 
-                                    LATITUDE                                           float                | 
-                                    LONGITUDE                                       float                | 
-                                    TEXT                                                    chararray         ] (in english)
-    
-    
-    */
-    
-    
-    
-    
-    
-    
-    
-    
-    
-  val explodedTWEETS = readyTWEETS
-       //only tweet_id and lowered text needed
-       .select($"tweet_id", $"text")
-       //explode text (n-words)(1-row) field in word(1-word)(n-rows) one
-       .explode("text", "word"){text: String => text.split(" ")}
+    val explodedTWEETS = readyTWEETS
+         //only tweet_id and lowered text needed
+         .select($"tweet_id", $"text")
+         //explode text (n-words)(1-row) field in word(1-word)(n-rows) one
+         .explode("text", "word"){text: String => text.split(" ")}
     
     
     //////////////////////////////////////////////////
     val sanitizeTweet = udf (( word: String) =>{
-           val regularExpression = "\\w+(\'\\w+)?".r 
-           val sanitizedWord = regularExpression.findFirstIn(word.toLowerCase)
-           val emptyWord = ""
-           sanitizedWord match{
-                      case None                               => emptyWord
-                      case Some(something)=> something
-           }
-     })
+        val regularExpression = "\\w+(\'\\w+)?".r 
+        val sanitizedWord = regularExpression.findFirstIn(word.toLowerCase)
+        val emptyWord = ""
+        sanitizedWord match {
+            case None            => emptyWord
+            case Some(something) => something
+        }
+    })
     
     /////////////////////////////////////////////////
     
