@@ -14,7 +14,7 @@ object KafkaWordCount {
     }
     val Array(broker, zk, topic) = args
     
-    val conf = new SparkConf().setAppName("NetworkWordCount").setMaster("local")
+    val conf = new SparkConf().setAppName("NetworkWordCount").setMaster("local[2]")
     val ssc = new StreamingContext(conf, Seconds(1))
     
     val kafkaConf = Map("metadata.broker.list" -> broker,
