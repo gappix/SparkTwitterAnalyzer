@@ -12,7 +12,7 @@ object ServerWordCount {
     }
     val Array(port) = args
     
-    val conf = new SparkConf().setAppName("ServerWordCount").setMaster("local[2]")
+    val conf = new SparkConf().setAppName("ServerWordCount").setMaster("local[*]")
     val ssc = new StreamingContext(conf, Seconds(1))
     
     // Create a DStream that will open a port connection on the specified port

@@ -12,7 +12,7 @@ object NetworkWordCount {
     }
     val Array(hostname, port) = args
     
-    val conf = new SparkConf().setAppName("NetworkWordCount").setMaster("local[2]")
+    val conf = new SparkConf().setAppName("NetworkWordCount").setMaster("local[*]")
     val ssc = new StreamingContext(conf, Seconds(1))
     
     // Create a DStream that will connect to hostname:port, example localhost:9999
