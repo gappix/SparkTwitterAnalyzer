@@ -67,88 +67,70 @@ class TweetStreamingApp(runParam : String) extends TweetApp(runParam) {
     val streamTweets = TwitterUtils.createStream(ssc, None)    
 
     //filtering by language and coordinates
-     val englishTweets = streamTweets
-           .filter { status => status.getLang=="en"}
-           .filter { status =>  myLocation.checkLocation(status) }
+    val englishTweets = streamTweets
+      .filter { status => status.getLang=="en"}
+      .filter { status =>  myLocation.checkLocation(status) }
      
-     /*-------------------------------------------------------------------------------------------
-      * Transformations for each RDD
-      *-------------------------------------------------------------------------------------------*/     
-      englishTweets.foreachRDD { rdd =>  
-   
-               /*.........................................................................................
-               * SQL envirnoment configuration
-               *.........................................................................................*/
-                val sqlContextHIVE = new HiveContext(rdd.sparkContext)
-                import sqlContextHIVE.implicits._
-            
-                
-              /*.........................................................................................
-               * User Defined Functions declarations
-               *.........................................................................................*/
+    /*-------------------------------------------------------------------------------------------
+     * Transformations for each RDD
+     *-------------------------------------------------------------------------------------------*/     
+    englishTweets.foreachRDD { rdd =>  
+      //sanitization with lowercase and standard-word charachters only
+      val sanitizeTweet = udf ((word: String) => {
+        val regularExpression = "\\w+(\'\\w+)?".r 
+        val sanitizedWord = regularExpression.findFirstIn(word.toLowerCase)
+        val emptyWord = ""
+        sanitizedWord match {
+          case None            => emptyWord
+           case Some(something) => something
+        }
+      })
               
-                //sanitization with lowercase and standard-word charachters only
-                val sanitizeTweet = udf (( word: String) => {
-                                        val regularExpression = "\\w+(\'\\w+)?".r 
-                                        val sanitizedWord = regularExpression.findFirstIn(word.toLowerCase)
-                                        val emptyWord = ""
-                                        sanitizedWord match {
-                                                                case None            => emptyWord
-                                                                case Some(something) => something
-                                                              }
-                })
+      // confidency rate evaluation
+      val confidencyValue = udf( (matched_words: Double, tweet_words: Double) => matched_words/tweet_words)
               
-              // confidency rate evaluation
-              val confidencyValue = udf( (matched_words: Double, tweet_words: Double) => matched_words/tweet_words)
-              
-              /*.........................................................................................
-               * RDD to DataFrame
-               *.........................................................................................*/
-              
-                val schema = StructType( 
-                                         Array( StructField( "tweet_id", LongType, true), 
-                                                StructField( "lang", StringType, true),
-                                                StructField( "user_id", LongType, true),
-                                                StructField( "user_name", StringType, true), 
-                                                StructField("bb_latitude", DoubleType, true),    
-                                                StructField("gl_latitude", DoubleType, true),
-                                                StructField("bb_longitude", DoubleType, true),    
-                                                StructField("gl_longitude", DoubleType, true),
-                                                StructField("text", StringType, true) 
-                                                )//end of Array definition
-                                                
-                                         )//end of StructType       
+      val schema = StructType( 
+        Array( StructField( "tweet_id", LongType, true), 
+               StructField( "lang", StringType, true),
+               StructField( "user_id", LongType, true),
+               StructField( "user_name", StringType, true), 
+               StructField("bb_latitude", DoubleType, true),    
+               StructField("gl_latitude", DoubleType, true),
+               StructField("bb_longitude", DoubleType, true),    
+               StructField("gl_longitude", DoubleType, true),
+               StructField("text", StringType, true) 
+        )//end of Array definition
+      )//end of StructType       
                 
-                //ready tweet with correct info extraction
-                val readyTweetsDF = sqlContextHIVE.createDataFrame(  
-                  rdd.map(   status =>   Row(
-                      status.getId,          //tweet_id
-                      status.getLang,        //lang
-                      status.getUser.getId,  //user_id
-                      status.getUser.getName,//user_name 
-                      getBoundingBoxCoordinates(status)._1, //bb_latitude
-                      getGeoLocationCoordinates(status)._1, //gl_latitude
-                      getBoundingBoxCoordinates(status)._2, //bb_longitude
-                      getGeoLocationCoordinates(status)._2, //gl_longitude
-                      status.getText        //text
-                      )//end of Row
-               ), schema);//end of createDataFrame
-               
-                val elaboratedTweets = Elaborate(sc, sqlContext, sqlContextHIVE, readyTweetsDF)
-                
-                elaboratedTweets.allTweets.show()
-                elaboratedTweets.sentimentTweets.show()
-                
-                elaboratedTweets.allTweets.registerTempTable("processed_tweets_TEMP")
-                elaboratedTweets.sentimentTweets.registerTempTable("tweet_sentiment_TEMP")
-                
-                //querying HIVE to store tempTable contents
-                sqlContextHIVE.sql("CREATE TABLE IF NOT EXISTS tweets_processed_3 (`tweet_id` bigint, `lang` string, `user_id` bigint, `user_name` string, `latitude` float, `longitude` float, `text` string) STORED AS ORC")
-                sqlContextHIVE.sql("CREATE TABLE IF NOT EXISTS tweets_sentiment_3 (`tweet_id` bigint, `sentiment_value` float, `matched_words` int, `tweet_words` int, `confidency_value` float) STORED AS ORC")
-                sqlContextHIVE.sql("INSERT INTO TABLE tweets_processed_3 SELECT * FROM processed_tweets_TEMP")
-                sqlContextHIVE.sql("INSERT INTO TABLE tweets_sentiment_3 SELECT * FROM tweet_sentiment_TEMP")
-    
-     }//end foreachRDD
+      //ready tweet with correct info extraction
+      val readyTweetsDF = sqlContextHIVE.createDataFrame(  
+        rdd.map(   status =>   Row(
+          status.getId,          //tweet_id
+          status.getLang,        //lang
+          status.getUser.getId,  //user_id
+          status.getUser.getName,//user_name 
+          getBoundingBoxCoordinates(status)._1, //bb_latitude
+          getGeoLocationCoordinates(status)._1, //gl_latitude
+          getBoundingBoxCoordinates(status)._2, //bb_longitude
+          getGeoLocationCoordinates(status)._2, //gl_longitude
+          status.getText        //text
+        )//end of Row
+      ), schema);//end of createDataFrame
+     
+      val elaboratedTweets = Elaborate(sc, sqlContext, sqlContextHIVE, readyTweetsDF)
+      
+      elaboratedTweets.allTweets.show()
+      elaboratedTweets.sentimentTweets.show()
+      
+      elaboratedTweets.allTweets.registerTempTable("processed_tweets_TEMP")
+      elaboratedTweets.sentimentTweets.registerTempTable("tweet_sentiment_TEMP")
+      
+      //querying HIVE to store tempTable contents
+      sqlContextHIVE.sql("CREATE TABLE IF NOT EXISTS tweets_processed_3 (`tweet_id` bigint, `lang` string, `user_id` bigint, `user_name` string, `latitude` float, `longitude` float, `text` string) STORED AS ORC")
+      sqlContextHIVE.sql("CREATE TABLE IF NOT EXISTS tweets_sentiment_3 (`tweet_id` bigint, `sentiment_value` float, `matched_words` int, `tweet_words` int, `confidency_value` float) STORED AS ORC")
+      sqlContextHIVE.sql("INSERT INTO TABLE tweets_processed_3 SELECT * FROM processed_tweets_TEMP")
+      sqlContextHIVE.sql("INSERT INTO TABLE tweets_sentiment_3 SELECT * FROM tweet_sentiment_TEMP")  
+    }//end foreachRDD
  
    /*-------------------------------------------------------------------------------------------
     * Streaming start and await
