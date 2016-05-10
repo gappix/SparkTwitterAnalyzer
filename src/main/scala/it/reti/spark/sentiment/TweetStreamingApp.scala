@@ -30,10 +30,10 @@ class TweetStreamingApp(runParam : String) extends TweetApp(runParam) {
   
   
   override def Run() {
-  val sc = new SparkContext(new SparkConf().setAppName("OPFelicitaS").setMaster("local[*]"))
-  val sqlContext = new SQLContext(sc)
-  val sqlContextHIVE = new HiveContext(sc)
-  val ssc = new StreamingContext(sc, Seconds(30))
+    val sc = new SparkContext(new SparkConf().setAppName("OPFelicitaS").setMaster("local[*]"))
+    val sqlContext = new SQLContext(sc)
+    val sqlContextHIVE = new HiveContext(sc)
+    val ssc = new StreamingContext(sc, Seconds(30))
   
   //import methods for DataFrame/RDD conversion
   import sqlContext.implicits._

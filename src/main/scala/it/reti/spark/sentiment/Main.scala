@@ -19,6 +19,7 @@ object Main {
       }
     }
     
+    
     if (app != null) app.Run()
     
   }
