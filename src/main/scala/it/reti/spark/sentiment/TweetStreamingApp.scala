@@ -90,10 +90,10 @@ class TweetStreamingApp(runParam : String) extends TweetApp(runParam) {
       val confidencyValue = udf( (matched_words: Double, tweet_words: Double) => matched_words/tweet_words)
               
       val schema = StructType( 
-        Array( StructField( "tweet_id", LongType, true), 
-               StructField( "lang", StringType, true),
-               StructField( "user_id", LongType, true),
-               StructField( "user_name", StringType, true), 
+        Array( StructField("tweet_id", LongType, true), 
+               StructField("lang", StringType, true),
+               StructField("user_id", LongType, true),
+               StructField("user_name", StringType, true), 
                StructField("bb_latitude", DoubleType, true),    
                StructField("gl_latitude", DoubleType, true),
                StructField("bb_longitude", DoubleType, true),    
