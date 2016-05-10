@@ -10,11 +10,7 @@ import scala.reflect.runtime.universe
 import org.apache.spark.sql.hive.HiveContext
   
 class TweetBatchApp(runParam : String) extends TweetApp(runParam) {  
-  override def Run() {
-    val sc = new SparkContext(new SparkConf().setAppName("OPFelicitaS").setMaster("local[*]"))
-    val sqlContext = new SQLContext(sc)
-    val sqlContextHIVE = new HiveContext(sc)
-      
+  override def Run(sc : SparkContext, sqlContext : SQLContext, sqlContextHIVE : HiveContext) {
     //import methods for DataFrame/RDD conversion
     import sqlContext.implicits._
     
@@ -51,7 +47,7 @@ class TweetBatchApp(runParam : String) extends TweetApp(runParam) {
         $"text"
     )// end select
     
-    val elaboratedTweets = Elaborate(readyTWEETS)
+    val elaboratedTweets = Elaborate(sc, sqlContext, sqlContextHIVE, readyTWEETS)
 
     //registering temp table to cache data
     elaboratedTweets.allTweets.show()

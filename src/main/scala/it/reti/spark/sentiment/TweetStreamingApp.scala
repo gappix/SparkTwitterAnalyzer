@@ -28,11 +28,7 @@ import org.apache.spark.SparkConf
 
 class TweetStreamingApp(runParam : String) extends TweetApp(runParam) {
   
-  
-  override def Run() {
-    val sc = new SparkContext(new SparkConf().setAppName("OPFelicitaS").setMaster("local[*]"))
-    val sqlContext = new SQLContext(sc)
-    val sqlContextHIVE = new HiveContext(sc)
+  override def Run(sc : SparkContext, sqlContext : SQLContext, sqlContextHIVE : HiveContext) {
     val ssc = new StreamingContext(sc, Seconds(30))
   
   //import methods for DataFrame/RDD conversion
@@ -138,7 +134,7 @@ class TweetStreamingApp(runParam : String) extends TweetApp(runParam) {
                       )//end of Row
                ), schema);//end of createDataFrame
                
-                val elaboratedTweets = Elaborate(readyTweetsDF)
+                val elaboratedTweets = Elaborate(sc, sqlContext, sqlContextHIVE, readyTweetsDF)
                 
                 elaboratedTweets.allTweets.show()
                 elaboratedTweets.sentimentTweets.show()

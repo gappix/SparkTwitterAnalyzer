@@ -1,8 +1,12 @@
 package it.reti.spark.sentiment
 
+import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.SQLContext
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkConf
+
 object Main {
   def main(args: Array[String]) {
-    
     val app = args(0) match {
       case "batch" => {
         val fileName = "/user/maria_dev/Tutorials/OpFelicita/LOMBARDIA.20160405-125641.json"
@@ -19,8 +23,10 @@ object Main {
       }
     }
     
-    
-    if (app != null) app.Run()
+    val sc = new SparkContext(new SparkConf().setAppName("OPFelicitaS").setMaster("local[*]"))
+    val sqlContext = new SQLContext(sc)
+    val sqlContextHIVE = new HiveContext(sc)
+    if (app != null) app.Run(sc, sqlContext, sqlContextHIVE)
     
   }
 }

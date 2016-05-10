@@ -10,13 +10,9 @@ import scala.reflect.runtime.universe
 import org.apache.spark.sql.hive.HiveContext
   
 abstract class TweetApp(runParam : String) extends Serializable {
-  def Run()
+  def Run(sc : SparkContext, sqlContext : SQLContext, sqlContextHIVE : HiveContext)
   
-  def Elaborate(allTWEETS : DataFrame) : {val allTweets : DataFrame; val sentimentTweets : DataFrame} = {
-    val sc = new SparkContext(new SparkConf().setAppName("OPFelicitaS").setMaster("local[*]"))
-    val sqlContext = new SQLContext(sc)
-    val sqlContextHIVE = new HiveContext(sc)
-     
+  def Elaborate(sc : SparkContext, sqlContext : SQLContext, sqlContextHIVE : HiveContext, allTWEETS : DataFrame) : {val allTweets : DataFrame; val sentimentTweets : DataFrame} = {
     //import methods for DataFrame/RDD conversion  
     import sqlContext.implicits._
     
