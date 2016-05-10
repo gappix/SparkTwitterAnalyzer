@@ -5,90 +5,29 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
 import org.apache.spark.sql._
 import org.apache.spark.sql.types._
-
-case class Hedo(
-    dictionary: String,
-    rank: Int,
-    sentiment_value: Float,
-    other1: Float,
-    other2: String,
-    other3: String,
-    other4: String
-    )
+import org.apache.spark.sql.functions._
+import scala.reflect.runtime.universe
+import org.apache.spark.sql.hive.HiveContext
   
-object TweetApp {
-  def main(args: Array[String]) {
-    val conf = new SparkConf()
-      .setAppName("OPFelicitaS")
-      .setMaster("local")
-      
-    val sc = new SparkContext(conf)
-    
-    //spark-sql context creation from sc
-    val sqlContext = new org.apache.spark.sql.SQLContext(sc)
-    val sqlContextHIVE = new org.apache.spark.sql.hive.HiveContext(sc)
-    
-    //import methods for DataFrame/RDD conversion
+abstract class TweetApp(runParam : String) extends Serializable {
+  def Run()
+  
+  def Elaborate(allTWEETS : DataFrame) : {val allTweets : DataFrame; val sentimentTweets : DataFrame} = {
+    val sc = new SparkContext(new SparkConf().setAppName("OPFelicitaS").setMaster("local[*]"))
+    val sqlContext = new SQLContext(sc)
+    val sqlContextHIVE = new HiveContext(sc)
+     
+    //import methods for DataFrame/RDD conversion  
     import sqlContext.implicits._
-    import org.apache.spark.sql.functions._
     
-    /*
-    ------------------------------------------ TWEET PROCESSING -------------------------------------------
-    */
-    
-    // Tweet json storage load
-    val inputTWEETS = sqlContextHIVE.read.json("/user/maria_dev/Tutorials/OpFelicita/LOMBARDIA.20160405-125641.json")
-    // Filtering based on language field
-    val englishTWEETS = inputTWEETS.filter($"lang".equalTo("en"))
-    
-    ////////////////////// UDFs to retrieve decapsulated coordinates ////////////////////////////////////////////////////////
-    
-    val extract_bounding_box_latitude = udf((box: Seq[Seq[Seq[Double]]]) => {
-      val latitude = box.head.head.last
-      latitude
-    })
-    
-    //////////////////////////////////
-    
-    val extract_bounding_box_longitude = udf((box: Seq[Seq[Seq[Double]]]) => {
-      val longitude = box.head.head.head
-      longitude
-    })
-    
-    //////////////////////////////////////////////////
-    
-    val extract_geo_localization_latitude = udf((box: Seq[Double]) => {
-      val latitude = box.last
-      latitude
-    })
-    
-    ///////////////////////////////////
-    
-    val extract_geo_localization_longitude = udf (( box: Seq[Double]) =>{
-      val longitude = box.head
-      longitude
-    })
-    
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-                
-    val readyTWEETS = englishTWEETS.select( 
-        $"id".as("tweet_id"), 
-        $"lang", 
-        $"user.id".as("user_id"), 
-        $"user.name".as("user_name"),
-    
-        //latitude extraction from the correct field
-        when($"coordinates".isNull, extract_bounding_box_latitude(englishTWEETS("place.bounding_box.coordinates")))
-        .otherwise(extract_geo_localization_latitude(englishTWEETS("coordinates.coordinates")))
-        .as("latitude"),
-    
-        //longitude extraction from the correct field
-        when($"coordinates".isNull, extract_bounding_box_longitude(englishTWEETS("place.bounding_box.coordinates")))
-        .otherwise(extract_geo_localization_longitude(englishTWEETS("coordinates.coordinates")))
-        .as("longitude"),
-    
-        $"text"
-    )// end select
+    val readyTWEETS = allTWEETS.select(
+        $"tweet_id",
+        $"lang",
+        $"user_id",
+        $"user_name",
+        when($"gl_latitude".isNull, $"bb_latitude").otherwise($"gl_latitude").as("latitude"),
+        when($"gl_longitude".isNull, $"bb_longitude").otherwise($"gl_longitude").as("longitude"),
+        $"text");
                                                    
     val explodedTWEETS = readyTWEETS
          //only tweet_id and lowered text needed
@@ -121,24 +60,10 @@ object TweetApp {
     
 
     //------------------------------------- HEDONOMETER LOADING -----------------------------------------------------
+    val myHedonometer = new Hedonometer(sc)
     
-
-    //loading from txt file
-    val inputHEDONOMETER = sc.textFile("/user/maria_dev/Tutorials/OpFelicitaS/hedonometerNOHEADER.txt")
-    
-    //splitting fields
-    val hedonometerDF = inputHEDONOMETER
-         //splitto quando trovo degli spazi
-         .map(_.split("\t")) 
-         //associo la case Class HEDO con la relativa struttura
-         .map( p => Hedo( p(0), p(1).toInt, p(2).toFloat, p(3).toFloat, p(4), p(5), p(6))) 
-         //trasformo in DataFrame l'RDD risultante
-         .toDF
-
-    //-------------------------------- JOIN AND SENTIMENT EVALUATION ------------------------------
-
     val sentimentTWEETS = sanitizedTWEETS
-         .join(hedonometerDF, $"word" === $"dictionary")
+         .join(myHedonometer.getHedonometer, $"word" === $"dictionary")
          .groupBy("tweet_id")
          .agg( "sentiment_value"  -> "avg",
                "word"             -> "count" )
@@ -147,9 +72,7 @@ object TweetApp {
     
     ////////////////////////////////
     
-    
     val confidencyValue = udf( (matched_words: Double, tweet_words: Double) => matched_words/tweet_words)
-    
     
     val sentimentConfidencyTWEET = sentimentTWEETS
           .join( wordCountByTweetDF, "tweet_id")
@@ -160,9 +83,9 @@ object TweetApp {
                    confidencyValue($"matched_words", $"tweet_words").as("confidency_value")
           )
     
-    sentimentConfidencyTWEET.registerTempTable("tweet_sentiment_TEMP")
-    
-    sqlContextHIVE.sql("CREATE TABLE bubba AS SELECT * FROM tweet_sentiment_TEMP")
-    //sqlContextHIVE.sql("INSERT INTO TABLE bubba SELECT * FROM tweet_sentiment_TEMP")
+    new {
+        val allTweets = readyTWEETS
+        val sentimentTweets = sentimentConfidencyTWEET
+    }
   }
 }

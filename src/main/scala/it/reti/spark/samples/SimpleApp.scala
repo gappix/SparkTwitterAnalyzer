@@ -1,4 +1,4 @@
-package it.reti.spark.sentiment
+package it.reti.spark.samples
 
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._

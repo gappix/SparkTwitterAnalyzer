@@ -1,4 +1,4 @@
-package it.reti.spark.streaming
+package it.reti.spark.samples
 
 import kafka.serializer.{DefaultDecoder, StringDecoder}
 import org.apache.spark.{SparkConf, SparkContext}

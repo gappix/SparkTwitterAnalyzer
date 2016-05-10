@@ -1,22 +1,22 @@
-package it.reti.spark.streaming
+package it.reti.spark.samples
 
 import org.apache.spark.{SparkConf, SparkContext, rdd}
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.storage.StorageLevel
 
-object NetworkWordCount {
+object ServerWordCount {
   def main(args: Array[String]) = {
-    if (args.length < 2) {
-      System.err.println("Usage: NetworkWordCount <hostname> <port>")
+    if (args.length < 1) {
+      System.err.println("Usage: ServerWordCount <port>")
       System.exit(1)
     }
-    val Array(hostname, port) = args
+    val Array(port) = args
     
-    val conf = new SparkConf().setAppName("NetworkWordCount").setMaster("local[*]")
+    val conf = new SparkConf().setAppName("ServerWordCount").setMaster("local[*]")
     val ssc = new StreamingContext(conf, Seconds(1))
     
-    // Create a DStream that will connect to hostname:port, example localhost:9999
-    val lines = ssc.socketTextStream(hostname, port.toInt, StorageLevel.MEMORY_AND_DISK_SER)
+    // Create a DStream that will open a port connection on the specified port
+    val lines = ssc.receiverStream(new SocketReceiver(port.toInt))
     
     // Split each line into words
     val words = lines.flatMap(_.split(" "))

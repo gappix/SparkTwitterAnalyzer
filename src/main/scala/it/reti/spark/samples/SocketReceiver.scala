@@ -1,4 +1,4 @@
-package it.reti.spark.streaming
+package it.reti.spark.samples
 
 import org.apache.spark.streaming.receiver.Receiver
 import org.apache.spark.storage.StorageLevel
