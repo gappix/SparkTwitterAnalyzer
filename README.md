@@ -9,7 +9,6 @@ This application lets you perform both batch and streaming tweet elaboration.
 
 
 
-<!-- ================================================================================ -->
 
 ## Getting Started
 
@@ -21,7 +20,7 @@ This application lets you perform both batch and streaming tweet elaboration.
 
 
 
-### Prerequisities 		<!-- ----------------------------------------------------->
+### Prerequisities 
 
 In order to start testing this project you should have following objects:
 * A linux-based performing Virtual Machine (at least 8GB RAM recommended) with:
@@ -34,7 +33,7 @@ In order to start testing this project you should have following objects:
 
 
 
-### Installing 		 	<!-- ----------------------------------------------------->
+### Installing 		
 
 For a correct HDP Sandbox install and in order to getting started with **Ambari** user and administration interfaces, just follow the official tutorial instructions: http://hortonworks.com/hadoop-tutorial/learning-the-ropes-of-the-hortonworks-sandbox/ 
 Once you feel confident with your Hadoop environment, just clone this project into a local workspace directory and you'll be ready to start!
@@ -44,7 +43,6 @@ NOTE that this application is fully written in **Scala**, which is a functional 
 *If you're already familiar with Java it should be quite understandable at first glance. Anyway, there is plenty of resources on the web (like: http://www.tutorialspoint.com/scala/scala_quick_guide.htm ) may help you taking quickly the edge of the learning curve.*
 
 
-<!-- ================================================================================ -->
 
 ## Running the app
 In order to launch the app execution, source code must be packed and exported into a **jar** file.
@@ -54,8 +52,7 @@ According to desired functionality there are different additional sources which 
 
 
 
-### Batch processing	<!-- --------------------------------------------------- -->
-
+### Batch processing	
 
 
 
@@ -86,8 +83,7 @@ You can access to stored informations using Ambari's HIVE View, or connecting an
 
 
 
-### Streaming processing	<!-- ----------------------------------------------------->
-
+### Streaming processing	
 
 ####General description
 Streaming processing mode executes the same *batch* processing steps to every bunch of tweets coming from a Twitter Stream Spout every 25 seconds. It gives an idea of SPARK flexibility power which let you adapt your already-written  batch processing code for a streaming usage.
@@ -126,7 +122,6 @@ After the environment initialization you should start see incoming tweets and se
 
 
 
-<!-- ================================================================================ -->
 
 ## Built With
 
@@ -143,7 +138,6 @@ After the environment initialization you should start see incoming tweets and se
 
 
 
-<!-- ================================================================================ -->
 
 ## Authors
 
