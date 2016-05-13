@@ -2,15 +2,22 @@ package it.reti.spark.sentiment
 
 import twitter4j.GeoLocation
 
-/**=================================================================================================================
- * Class Location for all location needed methods
- *=================================================================================================================*/
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * Location class
+ * @param userSelection: it is an integer according to which a specific area of interest is defined
+ * It contains methods to check if tweet location is inside desired area of interest
+ */
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
 @SerialVersionUID(100L)
 class Location(userSelection: Int) extends Serializable {
   
-  private val areaOfInterest = new Array[GeoLocation](2)
   
   //define the areaOfInterest according to userSelection
+  private val areaOfInterest = new Array[twitter4j.GeoLocation](2)
+  
   userSelection match{
     
     // London
@@ -20,80 +27,103 @@ class Location(userSelection: Int) extends Serializable {
     case 1 => {  areaOfInterest(0) = new GeoLocation(-42.565406, 112.894454)  //bottom-left
                  areaOfInterest(1) = new GeoLocation(-12.141625, 155.521404) }//top-right
     // Busto Arsizio
-    case 3 => {  areaOfInterest(0) = new GeoLocation(45.482755, 8.761141)  //bottom-left
-                 areaOfInterest(1) = new GeoLocation(45.692082, 8.995287) }//top-right
+    case 3 => {  areaOfInterest(0) = new GeoLocation(45.0, 8.0)  //bottom-left
+                 areaOfInterest(1) = new GeoLocation(46.0, 9.0) }//top-right
     
     // USA
     case 4 => {  areaOfInterest(0) = new GeoLocation(23.357475, -126.549851)  //bottom-left
                  areaOfInterest(1) = new GeoLocation(49.178176, -66.960012) }//top-right
+    
+    // ALL OVER THE WORLD
+    case default => {
+                      /*<<< WARN >>>*/ LogHandler.log.warn("input error: ALL WORLD selected!")
+                      areaOfInterest(0) = new GeoLocation(180, -180)  //bottom-left
+                      areaOfInterest(1) = new GeoLocation(90, -90) }//top-right
+      
+                      
+    
   
-  }//end of get_Location
+  }
   
-  /*
-   * area of interest getter
+  
+  
+  //.............................................................................................................
+  /**
+   * method that
+   * @return selected areaOfInterest
    */
   def getAreaOfInterest = areaOfInterest
 
-/*
- * location checker
- */
-def checkLocation(tweet: twitter4j.Status): Boolean = {
   
-   //if i have geoLocation value
-   if(tweet.getGeoLocation !=null){
+  
+  
+  //.............................................................................................................
+  /**
+   * location checker
+   * @param tweet: is the tweet status to be checked
+   * @return true if tweet location is inside desired area of interest
+   */
+  def checkLocation(tweet: twitter4j.Status): Boolean = {
     
-     if(  latitudeInBox(tweet.getGeoLocation.getLatitude) 
-           && longitudeInBox(tweet.getGeoLocation.getLongitude)  ) true
-     else false 
-   }
-   else{
-     
-     //if i have Place value
-     if(tweet.getPlace !=null){
-         if(  latitudeInBox(tweet.getPlace.getBoundingBoxCoordinates.head.head.getLatitude) 
-               && longitudeInBox(tweet.getPlace.getBoundingBoxCoordinates.head.head.getLongitude)  ) true
-         else false 
-     
-     }else false
-   }
+     //if i have geoLocation value
+     if(tweet.getGeoLocation !=null){
+      
+       if(  latitudeInBox(tweet.getGeoLocation.getLatitude) 
+             && longitudeInBox(tweet.getGeoLocation.getLongitude)  ) true
+       else false 
+     }
+     else{
+       
+       //if i have Place value
+       if(tweet.getPlace !=null){
+           if(  latitudeInBox(tweet.getPlace.getBoundingBoxCoordinates.head.head.getLatitude) 
+                 && longitudeInBox(tweet.getPlace.getBoundingBoxCoordinates.head.head.getLongitude)  ) true
+           else false 
+       
+       }else false
+     }
 
   
-}
+  }// end checkLocation method //
 
 
-
-
-/*
-* Check if Latitude is in my areaOfInterest range
-*/
   
-def latitudeInBox(latitudeToCheck: Double): Boolean = {
+  //.............................................................................................................
+  /**
+   * Latitude checker
+   * @param latitudeToCheck 
+   * @return true if it is in my areaOfInterest latitude range
+   */
+  def latitudeInBox(latitudeToCheck: Double): Boolean = {
+    
+    if ((latitudeToCheck >= areaOfInterest.head.getLatitude) && (latitudeToCheck <= areaOfInterest.last.getLatitude))
+      true
+    else
+      false 
+      
+  }//end latitudeInBox method //
+
+
+
   
-  if ((latitudeToCheck >= areaOfInterest.head.getLatitude) && (latitudeToCheck <= areaOfInterest.last.getLatitude))
-    true
-  else
-    false 
-}//end latitudeInBox
-
-
-
-
-
-/*
-* check if Longitude is in my areaOfInterest range
-*/
   
-def longitudeInBox(longitudeToCheck: Double): Boolean = {
+
+  //.............................................................................................................
+ /**
+   * Longitude checker
+   * @param longitudeToCheck 
+   * @return true if it is in my areaOfInterest longitude range
+   */
+  def longitudeInBox(longitudeToCheck: Double): Boolean = {
+    
+    if ((longitudeToCheck >= areaOfInterest.head.getLongitude) && (longitudeToCheck <= areaOfInterest.last.getLongitude))
+      true
+    else
+      false 
+  }//end latitudeInBox method //
+
+
   
-  if ((longitudeToCheck >= areaOfInterest.head.getLongitude) && (longitudeToCheck <= areaOfInterest.last.getLongitude))
-    true
-  else
-    false 
-}//end latitudeInBox
+  
 
-
-
-}//end Location class
-	 
-
-
+}//end Location class //

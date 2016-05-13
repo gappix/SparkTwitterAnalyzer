@@ -4,6 +4,8 @@ import scala.reflect.runtime.universe
 
 import org.apache.spark.SparkContext
 
+
+
 //case class for Hedonometer structure (needed for DataFrame creation)
 case class Hedo(
     dictionary: String,
@@ -15,42 +17,46 @@ case class Hedo(
     other4: String
     )
     
-
-/**==================================================================================================================
- *            Class Hedonometer  
- *===================================================================================================================*/
     
-class Hedonometer(sc: SparkContext) extends Serializable{
+    
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * This class loads the hedonometer dictionary from a HDFS text file and structures it as DataFrame
+ * It can be accessed by other classes by a getHedonometer invocation   
+ */
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+class Hedonometer() extends Serializable{
   
-   /*-------------------------------------------------------------------------------------------
-    * SPARK HIVE environment configuration
-    *-------------------------------------------------------------------------------------------*/
-    private val sqlContextHIVE = new org.apache.spark.sql.hive.HiveContext(sc)
-    
+  
+  
+    //getting Contexts
+    val sc = ContextHandler.getSparkContext
+    val sqlContextHIVE = ContextHandler.getSqlContextHIVE
     //import methods for DataFrame/RDD conversion
     import sqlContextHIVE.implicits._
     
-    /*---------------------------------------------------------------------------------------------
-     * Hedonometer loading and dataframe transformation
-     *---------------------------------------------------------------------------------------------*/
     
-
-    //loading from txt file
-    private val inputHEDONOMETER = sc.textFile("/user/maria_dev/Tutorials/OpFelicitaS/hedonometerNOHEADER.txt")
     
-    //splitting fields
-    private val hedonometerDF = inputHEDONOMETER
-         //splitto quando trovo degli spazi
-         .map(_.split("\t")) 
-         //associo la case Class HEDO con la relativa struttura
-         .map( p => Hedo( p(0), p(1).toInt, p(2).toFloat, p(3).toFloat, p(4), p(5), p(6))) 
-         //trasformo in DataFrame l'RDD risultante
-         .toDF
-              
+    //load textfile RDD
+    private val inputHEDONOMETER = sc.textFile("/user/maria_dev/Tutorials/SPARKTwitterAnalyzer/HedonometerNOHEADER.txt")
+    
+    //DataFrame creation
+    private val hedonometerDF = inputHEDONOMETER 
+                               .map(_.split("\t")) //split on tab spaces 
+                               .map( //RDD association with Hedo case class
+                                     p => Hedo( p(0), p(1).toInt, p(2).toFloat, p(3).toFloat, p(4), p(5), p(6))
+                                     ) 
+                               .toDF //DataFrame creation
+     
+         
+         
+    //.............................................................................................................     
     /**     
-     *  Method to return the entire Hedonometer DataFrame   
+     *  Method to 
+     *  @return the entire hedonometer dictionary DataFrame  
      */
     def getHedonometer  = hedonometerDF
     
-}
+    
+}// end  Hedonometer class //
 
