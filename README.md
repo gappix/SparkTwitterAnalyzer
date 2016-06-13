@@ -1,13 +1,7 @@
-# SPARK Twitter Analyzer
+# Spark Twitter Analyzer
 
 We present a sample project that can get you started with the amazing **Apache SPARK**, a powerful and flexible Big Data processing tool. 
 This application lets you perform both batch and streaming tweet elaboration.
-
-
-
-
-
-
 
 
 
