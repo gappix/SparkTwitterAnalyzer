@@ -8,14 +8,6 @@ This application lets you perform both batch and streaming tweet elaboration.
 
 ## Getting Started
 
-
-
-
-
-
-
-
-
 ### Prerequisities 
 
 In order to start testing this project you should have following objects:
@@ -25,10 +17,6 @@ In order to start testing this project you should have following objects:
 	- Internet access
 * A Scala-friendly IDE like: http://scala-ide.org/
 
-
-
-
-
 ### Installing 		
 
 For a correct HDP Sandbox install and in order to getting started with **Ambari** user and administration interfaces, just follow the official tutorial instructions: http://hortonworks.com/hadoop-tutorial/learning-the-ropes-of-the-hortonworks-sandbox/ 
@@ -37,8 +25,6 @@ Once you feel confident with your Hadoop environment, just clone this project in
 
 NOTE that this application is fully written in **Scala**, which is a functional Java super-set language.
 *If you're already familiar with Java it should be quite understandable at first glance. Anyway, there is plenty of resources on the web (like: http://www.tutorialspoint.com/scala/scala_quick_guide.htm ) may help you taking quickly the edge of the learning curve.*
-
-
 
 ## Running the app
 In order to launch the app execution, source code must be packed and exported into a **jar** file.
