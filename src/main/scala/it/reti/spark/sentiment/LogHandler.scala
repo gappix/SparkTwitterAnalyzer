@@ -8,7 +8,6 @@ import org.apache.log4j.Level
 /**
  * This object gives a transient reference to Logger methods to permit cluster distributed logging operations
  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 object LogHandler extends Serializable {
   
   

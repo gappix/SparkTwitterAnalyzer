@@ -21,7 +21,7 @@ import org.apache.spark.Logging
 
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°*/
 /**
  * This class is an extension of TweetApp one.
  * It implements a specific Run method for streaming data retrieving from a twitter stream spout.
@@ -29,14 +29,14 @@ import org.apache.spark.Logging
  * 
  * @param locationToObserve: String containing an integer number according to Location class options
  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TweetStreamingApp(locationToObserve : String) extends TweetApp("streaming") with Logging {
   
   
 
   
   
-  //.........................................................................................................
+  
+  /*.................................................................................................................*/
   /**
    * Run method OVERRIDED in order to fulfill streaming app processing needings
    * It takes spout source data and packs everything into a single DataFrame every 25 seconds.
@@ -47,7 +47,7 @@ class TweetStreamingApp(locationToObserve : String) extends TweetApp("streaming"
     
     
     //interval settings
-    val intervalSeconds = 25
+    val intervalSeconds = 25 /* <---- set this to best interval for your operation */ 
     
     //import context needed
     val sc = ContextHandler.getSparkContext
@@ -79,7 +79,7 @@ class TweetStreamingApp(locationToObserve : String) extends TweetApp("streaming"
     val myLocation = new Location(augmentString(locationToObserve).toInt)
     
     //optionally set word filters on input data
-    val filters = new Array[String](1)
+    val filters = new Array[String](0)
     
     
     
@@ -89,7 +89,7 @@ class TweetStreamingApp(locationToObserve : String) extends TweetApp("streaming"
     
     //input tweets 
     /*<<< INFO >>>*/ logInfo("Opening Twitter stream...")
-    val streamTweets = TwitterUtils.createStream(ssc, None)    
+    val streamTweets = TwitterUtils.createStream(ssc, None, filters, StorageLevel.MEMORY_ONLY_SER)    
     /*<<< INFO >>>*/ logInfo("Stream opened!")
 
     
@@ -104,16 +104,18 @@ class TweetStreamingApp(locationToObserve : String) extends TweetApp("streaming"
                               .filter { status =>  myLocation.checkLocation(status) }
       
                             
-
+   
     
    /*----------------------------------------------------
  	  * Transformations for each RDD
    	*---------------------------------------------------*/     
     englishTweets.foreachRDD { rdd    => 
-    
-    
+
     
 
+    /*<<< INFO >>>*/ logInfo(rdd.toString() +  " started!")
+    
+    
     
     
    /*...........................................
@@ -154,7 +156,7 @@ class TweetStreamingApp(locationToObserve : String) extends TweetApp("streaming"
       
                                                         
                                                                     
-      /*<< INFO >>*/ logInfo("Received " + readyTweetsDF.count.toString() + " tweets") 
+      /*<< INFO >>*/logInfo("Received " + readyTweetsDF.persist().count.toString() + " tweets") 
       readyTweetsDF.show()
       
       
@@ -165,24 +167,29 @@ class TweetStreamingApp(locationToObserve : String) extends TweetApp("streaming"
        
        
           //Elaborate method invoked at every RDD
-          /*<< INFO >>*/ logInfo( rdd.toString() + "Starting Tweet block processing...")
           val elaboratedTweets = Elaborate(readyTweetsDF)
-          /*<<< INFO >>>*/ logInfo(rdd.toString() + " Elaboration completed!") 
+           
           
           
           
   
           //store DataFrames to HIVE tables
-          /*<<< INFO >>>*/ logInfo(rdd.toString() + " Sending DataFrames to HIVE Storage...")
           storeDataFrameToHIVE( elaboratedTweets.allTweets, elaboratedTweets.sentimentTweets) 
-          /*<<< INFO >>>*/ logInfo(rdd.toString() +  " Processing completed!")
-         
           
+          //free memory
+          readyTweetsDF.unpersist()
+          /*<<< INFO >>>*/ logInfo(rdd.toString() +  " Processing completed!")
+       
           
       }//end if
     
-       /*<<< INFO >>>*/ logInfo("\n\n ========================================== END ROUND ============================================>>>\n\n\n")
     
+    
+    
+     /*<<< INFO >>>*/ logInfo("\n\n ========================================== END ROUND ============================================>>>\n\n\n")
+    
+
+       
     }//end foreachRDD
  
     
@@ -204,7 +211,7 @@ class TweetStreamingApp(locationToObserve : String) extends TweetApp("streaming"
   
   
   
-  //...........................................................................................................
+  /*.................................................................................................................*/
   /**
    * Method that
    * @return (GeoLocation latitude, GeoLocation longitude) if present, (None None) otherwise
@@ -226,7 +233,7 @@ class TweetStreamingApp(locationToObserve : String) extends TweetApp("streaming"
   
   
   
-  //...........................................................................................................
+  /*.................................................................................................................*/
   /**
    * Method that
    * @return (Place latitude, Place longitude) if present, (None None) otherwise

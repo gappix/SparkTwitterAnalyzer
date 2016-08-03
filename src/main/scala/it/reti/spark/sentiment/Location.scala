@@ -5,13 +5,12 @@ import org.apache.spark.Logging
 
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°*/
 /**
  * Location class
  * @param userSelection: it is an integer according to which a specific area of interest is defined
  * It contains methods to check if tweet location is inside desired area of interest
  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
 @SerialVersionUID(100L)
 class Location(userSelection: Int) extends Serializable with Logging{
   
@@ -37,6 +36,10 @@ class Location(userSelection: Int) extends Serializable with Logging{
     case 4 => {  areaOfInterest(0) = new GeoLocation(44.973063, 8.488667)  //bottom-left
                  areaOfInterest(1) = new GeoLocation(46.5868, 10.756680) }//top-right
     
+    //UK
+    case 5 => {  areaOfInterest(0) = new GeoLocation(49.788002, -7.739949)  //bottom-left
+                 areaOfInterest(1) = new GeoLocation(60.999482, 1.488566) }//top-right
+    
     // ALL OVER THE WORLD
     case default => {
                       /*<<< WARN >>>*/ logWarning("input error: ALL WORLD selected!")
@@ -50,7 +53,7 @@ class Location(userSelection: Int) extends Serializable with Logging{
   
   
   
-  //.............................................................................................................
+  /*.................................................................................................................*/
   /**
    * method that
    * @return selected areaOfInterest
@@ -60,7 +63,7 @@ class Location(userSelection: Int) extends Serializable with Logging{
   
   
   
-  //.............................................................................................................
+  /*.................................................................................................................*/
   /**
    * location checker
    * @param tweet: is the tweet status to be checked
@@ -78,7 +81,7 @@ class Location(userSelection: Int) extends Serializable with Logging{
      else{
        
        //if i have Place value
-       if(tweet.getPlace !=null){
+       if((tweet.getPlace !=null)&&(tweet.getPlace.getBoundingBoxCoordinates!=null)&&(tweet.getPlace.getBoundingBoxCoordinates.head !=null)){
            if(  latitudeInBox(tweet.getPlace.getBoundingBoxCoordinates.head.head.getLatitude) 
                  && longitudeInBox(tweet.getPlace.getBoundingBoxCoordinates.head.head.getLongitude)  ) true
            else false 
@@ -91,7 +94,7 @@ class Location(userSelection: Int) extends Serializable with Logging{
 
 
   
-  //.............................................................................................................
+  /*.................................................................................................................*/
   /**
    * Latitude checker
    * @param latitudeToCheck 
@@ -111,7 +114,7 @@ class Location(userSelection: Int) extends Serializable with Logging{
   
   
 
-  //.............................................................................................................
+  /*.................................................................................................................*/
  /**
    * Longitude checker
    * @param longitudeToCheck 

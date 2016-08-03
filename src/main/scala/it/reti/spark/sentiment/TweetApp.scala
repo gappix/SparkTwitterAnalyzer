@@ -12,13 +12,12 @@ import org.apache.spark.Logging
 
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°*/
 /**
  *   This abstract class contains all main methods for processing execution.
  *   It must be extended implementing the Run method according to desired execution.
  *   Elaboration and storing methods are, on the contrary, common for every purpose.   
  */
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 abstract class TweetApp(processingType : String) extends Serializable with Logging{
 
   
@@ -30,7 +29,9 @@ abstract class TweetApp(processingType : String) extends Serializable with Loggi
   
   
   
-  //................................................................................................................//
+  
+  
+  /*.................................................................................................................*/
   /** 
   * Method TRAIT.
   * MUST BE OVERRIDED in class extension.
@@ -41,7 +42,9 @@ abstract class TweetApp(processingType : String) extends Serializable with Loggi
   
   
   
-  //...............................................................................................................//
+  
+  
+  /*.................................................................................................................*/
   /**
    * Method which elaborates tweet DataFrames evaluating sentiment values.
    * It  joins tweets with an "Hedonometer dictionary" which assign to each word an happiness value. 
@@ -76,11 +79,11 @@ abstract class TweetApp(processingType : String) extends Serializable with Loggi
                                                   val regularExpression = "\\w+(\'\\w+)?".r 
                                                   val sanitizedWord = regularExpression.findFirstIn(word.toLowerCase)
                                                   val emptyWord = ""
-                                                  sanitizedWord match {
+                                                  sanitizedWord match 
+                                                  {
                                                       case None            => emptyWord
-                                                      case Some(something) => something
-                                                  }
-                               })
+                                                      case Some(something) => something     }
+                                               })
     
                                
     /*---------------------------------------------------*
@@ -170,12 +173,12 @@ abstract class TweetApp(processingType : String) extends Serializable with Loggi
   
   
   
-  //.................................................................................................................
+  /*.................................................................................................................*/
   /**
    * Method which stores DataFrames with elaborated values into HIVE tables 
    * 
-   * @param tweetProcessedDF	DataFrame containing already processed tweets with final values
-   * @param sentimentDF				DataFrame containing tweet sentiment and confidency evaluation 
+   * @tweetProcessedDF	DataFrame containing already processed tweets with final values
+   * @sentimentDF				DataFrame containing tweet sentiment and confidency evaluation 
    * 
    */
   def storeDataFrameToHIVE ( tweetProcessedDF: DataFrame,  sentimentDF: DataFrame) {
@@ -184,15 +187,9 @@ abstract class TweetApp(processingType : String) extends Serializable with Loggi
     
     
     //call the DataStore object passing the Dataframe to store
-    
-    
-    /*<<INFO>>*/  logInfo("Opening tweet storing procedure...")
     myDataStorer.storeTweetsToHIVE(tweetProcessedDF)
-    /*<<INFO>>*/  logInfo("tweets storing closed!")
-    
-    /*<<INFO>>*/  logInfo("Opening sentiment storing procedure...")
     myDataStorer.storeSentimentToHIVE(sentimentDF)
-    /*<<INFO>>*/  logInfo("sentiment storing closed!")
+
 
     
     

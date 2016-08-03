@@ -4,6 +4,7 @@ import scala.reflect.runtime.universe
 import org.apache.spark.Logging
 import org.apache.spark.SparkContext
 import org.apache.spark.storage.StorageLevel
+import org.apache.spark.util.SizeEstimator
 
 
 
@@ -20,12 +21,11 @@ case class Hedo(
     
     
     
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°*/
 /**
  * This class loads the hedonometer dictionary from a HDFS text file and structures it as DataFrame
  * It can be accessed by other classes by a getHedonometer invocation   
- */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+ */    
 object Hedonometer extends Serializable with Logging{
   
   
@@ -41,6 +41,8 @@ object Hedonometer extends Serializable with Logging{
     //load textfile RDD
     private val inputHEDONOMETER = sc.textFile("/user/maria_dev/Tutorials/SPARKTwitterAnalyzer/HedonometerNOHEADER.txt")
     
+    
+    
     //DataFrame creation
     private val hedonometerDF = inputHEDONOMETER 
                                .map(_.split("\t")) //split on tab spaces 
@@ -49,19 +51,20 @@ object Hedonometer extends Serializable with Logging{
                                      ) 
                                .toDF //DataFrame creation
      
-     
+    
     //BROADCAST the data loaded to all cluster nodes
-    val broadCastedHedonometer = sc.broadcast(hedonometerDF)
+    private val broadCastedHedonometer = sc.broadcast(hedonometerDF)
      
     
-    
+
     //.............................................................................................................     
     /**     
      *  Method to 
      *  @return the entire hedonometer dictionary DataFrame from local broadcasted variable
      */
-    def getHedonometer  =  broadCastedHedonometer.value
-    
+    def getHedonometer  = broadCastedHedonometer.value
+      
+
 
     
     
