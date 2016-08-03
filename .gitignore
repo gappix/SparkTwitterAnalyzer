@@ -1,3 +1,4 @@
+# Eclipse
 target/*
 *.class
 *.jar
@@ -6,3 +7,17 @@ target/*
 .cache-main
 /target/
 /bin/
+.project
+
+
+# Intellij
+.idea/
+*.iml
+*.iws
+
+# Mac
+.DS_Store
+
+# Maven
+log/
+target/
