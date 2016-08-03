@@ -5,3 +5,4 @@ target/*
 .classpath
 .cache-main
 /target/
+/bin/
